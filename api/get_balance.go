@@ -16,7 +16,7 @@ type balanceFromChain struct {
 	Balances []balance `json:"balances"`
 }
 
-type Response struct {
+type balResponse struct {
 	Status       int       `json:"status,omitempty"`
 	Balances     []balance `json:"balances,omitempty"`
 	Chain        string    `json:"chain,omitempty"`
@@ -30,7 +30,7 @@ func BalanceHandler(w http.ResponseWriter, r *http.Request) {
 	addr := r.URL.Query().Get("addr")
 	chain := strings.ToLower(r.URL.Query().Get("chain"))
 	var api string
-	var finalRes *Response
+	var finalRes *balResponse
 	var wrongChain = false
 	if addr != "" && chain != "" {
 		path := "/cosmos/bank/v1beta1/balances/"
@@ -57,7 +57,7 @@ func BalanceHandler(w http.ResponseWriter, r *http.Request) {
 				if err != nil {
 					return
 				}
-				finalRes = &Response{
+				finalRes = &balResponse{
 					Balances:     BalanceFromChain.Balances,
 					Chain:        chain,
 					Address:      addr,
@@ -65,21 +65,21 @@ func BalanceHandler(w http.ResponseWriter, r *http.Request) {
 					ResponseText: "success",
 				}
 			} else {
-				finalRes = &Response{
+				finalRes = &balResponse{
 					Status:       res.StatusCode,
 					ResponseText: "something went wrong",
 				}
 
 			}
 		} else {
-			finalRes = &Response{
+			finalRes = &balResponse{
 				Status:       501,
 				ResponseText: "The chain isn't supported or does not exist",
 			}
 		}
 
 	} else {
-		finalRes = &Response{
+		finalRes = &balResponse{
 			Status:       501,
 			ResponseText: "Address or chain name can't be empty",
 		}
