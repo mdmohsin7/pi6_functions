@@ -48,7 +48,7 @@ func FindAccounts(w http.ResponseWriter, r *http.Request) {
 		if e != nil {
 			log.Println(k, e)
 		}
-		accounts[k] = addr
+		accounts[v] = addr
 	}
 	if err != nil {
 		return
