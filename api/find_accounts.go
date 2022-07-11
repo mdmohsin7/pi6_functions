@@ -65,7 +65,7 @@ func saveAccounts(uid string, addresses map[string]string) (int, error) {
 	var resErr error = nil
 	ctx := context.Background()
 	sa := option.WithCredentialsJSON(bytes)
-	app, err := firebase.NewApp(ctx, &firebase.Config{ProjectID: "pi6-fi"}, sa)
+	app, err := firebase.NewApp(ctx, &firebase.Config{ProjectID: os.Getenv("FC_PROJECTID")}, sa)
 	if err != nil {
 		resErr = err
 		log.Fatalln(err)

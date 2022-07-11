@@ -42,7 +42,7 @@ func getAccountAddresses(uid string) (res int, err error, addresses interface{})
 	bytes, err := json.Marshal(fc)
 	ctx := context.Background()
 	sa := option.WithCredentialsJSON(bytes)
-	app, err := firebase.NewApp(ctx, &firebase.Config{ProjectID: "pi6-fi"}, sa)
+	app, err := firebase.NewApp(ctx, &firebase.Config{ProjectID: os.Getenv("FC_PROJECTID")}, sa)
 	if err != nil {
 		resErr = err
 		log.Fatalln(err)
@@ -141,12 +141,16 @@ func getBalance(k string, v string) (resStatus int, resErr error) {
 		if res.StatusCode == 200 {
 			resBody, _ := ioutil.ReadAll(res.Body)
 			resJson := string(resBody)
+			fmt.Println(resJson)
 			var balanceFromChain api_utils.BalanceFromChain
 			err := json.Unmarshal([]byte(resJson), &balanceFromChain)
 			if err != nil {
 				return
 			}
-			balances[k] = balanceFromChain.Balances
+			if len(balanceFromChain.Balances) > 0 {
+				balances[k] = balanceFromChain.Balances
+			}
+
 			s = 200
 			resError = nil
 
