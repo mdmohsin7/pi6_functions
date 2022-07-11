@@ -5,23 +5,16 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"pi6_functions/api_utils"
 	"strings"
 )
 
-type balance struct {
-	Denom  string `json:"denom"`
-	Amount string `json:"amount"`
-}
-type balanceFromChain struct {
-	Balances []balance `json:"balances"`
-}
-
 type balResponse struct {
-	Status       int       `json:"status,omitempty"`
-	Balances     []balance `json:"balances,omitempty"`
-	Chain        string    `json:"chain,omitempty"`
-	Address      string    `json:"address,omitempty"`
-	ResponseText string    `json:"responseText,omitempty"`
+	Status       int                 `json:"status,omitempty"`
+	Balances     []api_utils.Balance `json:"balances,omitempty"`
+	Chain        string              `json:"chain,omitempty"`
+	Address      string              `json:"address,omitempty"`
+	ResponseText string              `json:"responseText,omitempty"`
 }
 
 func BalanceHandler(w http.ResponseWriter, r *http.Request) {
@@ -36,9 +29,9 @@ func BalanceHandler(w http.ResponseWriter, r *http.Request) {
 		path := "/cosmos/bank/v1beta1/balances/"
 		if chain == "cre" {
 			api = "https://mainnet.crescent.network:1317" + path + addr
-		} else if chain == "atom" {
+		} else if chain == "cosmos" {
 			api = "https://rest-cosmoshub.ecostake.com" + path + addr
-		} else if chain == "akt" {
+		} else if chain == "akash" {
 			api = "https://akash.c29r3.xyz:443/api" + path + addr
 		} else {
 			wrongChain = true
@@ -46,19 +39,19 @@ func BalanceHandler(w http.ResponseWriter, r *http.Request) {
 		if wrongChain == false {
 			res, apiErr := http.Get(api)
 			if apiErr != nil {
-				return
+				fmt.Println(apiErr)
 			}
 
 			if res.StatusCode == 200 {
 				resBody, _ := ioutil.ReadAll(res.Body)
 				resJson := string(resBody)
-				var BalanceFromChain balanceFromChain
-				err := json.Unmarshal([]byte(resJson), &BalanceFromChain)
+				var balanceFromChain api_utils.BalanceFromChain
+				err := json.Unmarshal([]byte(resJson), &balanceFromChain)
 				if err != nil {
 					return
 				}
 				finalRes = &balResponse{
-					Balances:     BalanceFromChain.Balances,
+					Balances:     balanceFromChain.Balances,
 					Chain:        chain,
 					Address:      addr,
 					Status:       res.StatusCode,
