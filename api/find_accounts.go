@@ -16,25 +16,6 @@ import (
 	"pi6_functions/api_utils"
 )
 
-var Prefixes = map[string]string{
-	"agoric":        "agoric",
-	"akash":         "akash",
-	"axelar":        "axelar",
-	"bandchain":     "band",
-	"cosmoshub":     "cosmos",
-	"crescent":      "cre",
-	"evmos":         "evmos",
-	"injective":     "inj",
-	"juno":          "juno",
-	"kava":          "kava",
-	"nomic":         "nomic",
-	"osmosis":       "osmo",
-	"regen":         "regen",
-	"secretnetwork": "secret",
-	"sommelier":     "somm",
-	"stargaze":      "stars",
-}
-
 type accResponse struct {
 	Status         int               `json:"status,omitempty"`
 	Addresses      map[string]string `json:"addresses,omitempty"`
@@ -124,7 +105,7 @@ func FindAccounts(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		return
 	}
-	for k, v := range Prefixes {
+	for k, v := range api_utils.Prefixes {
 		addr, e := bech32.ConvertAndEncode(v, b64)
 		if e != nil {
 			log.Println(k, e)

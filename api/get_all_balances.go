@@ -15,12 +15,17 @@ import (
 	"pi6_functions/api_utils"
 )
 
-var balances = make(map[string][]api_utils.Balance)
+var balances []bal
+
+type bal struct {
+	Balances []api_utils.Balance `json:"balances"`
+	Chain    string              `json:"chain"`
+}
 
 type allBalResponse struct {
-	Balances     map[string][]api_utils.Balance `json:"balances,omitempty"`
-	Status       int                            `json:"status,omitempty"`
-	ResponseText string                         `json:"responseText,omitempty"`
+	ChainBalances []bal  `json:"chainBalances,omitempty"`
+	Status        int    `json:"status,omitempty"`
+	ResponseText  string `json:"responseText,omitempty"`
 }
 
 func getAccountAddresses(uid string) (res int, err error, addresses interface{}) {
@@ -97,9 +102,9 @@ func AllBalancesHandler(w http.ResponseWriter, r *http.Request) {
 			}
 			if s == 200 {
 				finalRes = &allBalResponse{
-					Balances:     balances,
-					Status:       200,
-					ResponseText: "successful",
+					ChainBalances: balances,
+					Status:        200,
+					ResponseText:  "successful",
 				}
 			}
 		}
@@ -148,7 +153,10 @@ func getBalance(k string, v string) (resStatus int, resErr error) {
 				return
 			}
 			if len(balanceFromChain.Balances) > 0 {
-				balances[k] = balanceFromChain.Balances
+				balances = append(balances, bal{
+					Balances: balanceFromChain.Balances,
+					Chain:    k,
+				})
 			}
 
 			s = 200
