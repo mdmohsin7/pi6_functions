@@ -90,6 +90,7 @@ func AllBalancesHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	uid := r.URL.Query().Get("uid")
 	var finalRes *allBalResponse
+	balances = nil
 	res, err, addresses := getAccountAddresses(uid)
 	if err != nil {
 		return

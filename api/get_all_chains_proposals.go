@@ -22,6 +22,7 @@ func AllChainsPropsHandler(w http.ResponseWriter, r *http.Request) {
 	var api string
 	path := "/cosmos/gov/v1beta1/proposals?proposal_status="
 	propStatus := "2"
+	proposals = nil
 	for _, v := range api_utils.Prefixes {
 		if v == "cosmos" {
 			api = "https://rest-cosmoshub.ecostake.com" + path + propStatus
