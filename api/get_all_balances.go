@@ -95,17 +95,19 @@ func AllBalancesHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if res == 200 {
+		var s int
 		for k, v := range addresses.(map[string]interface{}) {
-			s, err := getBalance(k, fmt.Sprint(v))
+			s, err = getBalance(k, fmt.Sprint(v))
 			if err != nil {
 				return
 			}
-			if s == 200 {
-				finalRes = &allBalResponse{
-					ChainBalances: balances,
-					Status:        200,
-					ResponseText:  "successful",
-				}
+
+		}
+		if s == 200 {
+			finalRes = &allBalResponse{
+				ChainBalances: balances,
+				Status:        200,
+				ResponseText:  "successful",
 			}
 		}
 	} else {
