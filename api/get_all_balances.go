@@ -13,6 +13,7 @@ import (
 	"net/http"
 	"os"
 	"pi6_functions/api_utils"
+	"strconv"
 )
 
 var balances []bal
@@ -22,10 +23,15 @@ type bal struct {
 	Chain    string              `json:"chain"`
 }
 
+type rateRes struct {
+	USD float64 `json:"USD"`
+}
+
 type allBalResponse struct {
-	ChainBalances []bal  `json:"chainBalances,omitempty"`
-	Status        int    `json:"status,omitempty"`
-	ResponseText  string `json:"responseText,omitempty"`
+	TotalBalInUSD float64 `json:"totalBalInUSD,omitempty"`
+	ChainBalances []bal   `json:"chainBalances,omitempty"`
+	Status        int     `json:"status,omitempty"`
+	ResponseText  string  `json:"responseText,omitempty"`
 }
 
 func getAccountAddresses(uid string) (res int, err error, addresses interface{}) {
@@ -90,8 +96,10 @@ func AllBalancesHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	uid := r.URL.Query().Get("uid")
 	var finalRes *allBalResponse
+	totalInUSD := 0.0
 	balances = nil
 	res, err, addresses := getAccountAddresses(uid)
+	api := "https://min-api.cryptocompare.com/data/price?fsym="
 	if err != nil {
 		return
 	}
@@ -103,8 +111,27 @@ func AllBalancesHandler(w http.ResponseWriter, r *http.Request) {
 			}
 
 		}
-
+		for i := range balances {
+			res, err := http.Get(api + api_utils.Tickers[balances[i].Chain] + "&tsyms=USD")
+			fmt.Println(api_utils.Tickers[balances[i].Chain])
+			if err != nil {
+				return
+			}
+			resBody, _ := ioutil.ReadAll(res.Body)
+			resJson := string(resBody)
+			fmt.Println(resJson)
+			var rateResponse rateRes
+			err = json.Unmarshal([]byte(resJson), &rateResponse)
+			fmt.Println(rateResponse)
+			balanceInFloat, err := strconv.ParseFloat(balances[i].Balances[0].Amount, 64)
+			if err != nil {
+				return
+			}
+			totalInUSD += (balanceInFloat / 1000000) * rateResponse.USD
+		}
+		fmt.Println(totalInUSD)
 		finalRes = &allBalResponse{
+			TotalBalInUSD: totalInUSD,
 			ChainBalances: balances,
 			Status:        200,
 			ResponseText:  "successful",
@@ -115,7 +142,6 @@ func AllBalancesHandler(w http.ResponseWriter, r *http.Request) {
 			ResponseText: "account does not exist",
 		}
 	}
-	fmt.Println(balances)
 	resData, _ := json.Marshal(finalRes)
 	_, _ = fmt.Fprintf(w, string(resData))
 }

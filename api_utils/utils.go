@@ -34,6 +34,18 @@ var Prefixes = map[string]string{
 	"stargaze":      "stars",
 }
 
+var Tickers = map[string]string{
+	"akash":   "akt",
+	"band":    "band",
+	"cosmos":  "atom",
+	"cre":     "cre",
+	"evmos":   "evmos",
+	"juno":    "juno",
+	"osmosis": "osmo",
+	"secret":  "scrt",
+	"stars":   "stars",
+}
+
 type FinalTallyResult struct {
 	Yes        string `json:"yes"`
 	No         string `json:"no"`
