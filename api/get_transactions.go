@@ -8,11 +8,26 @@ import (
 	"strings"
 )
 
+type finalTxnData struct {
+	Count      string     `json:"count"`
+	TotalCount string     `json:"total_count"`
+	Txs        []finalTxn `json:"txs"`
+}
+
+type finalTxn struct {
+	Height    string   `json:"height"`
+	Txhash    string   `json:"txhash"`
+	Data      string   `json:"data"`
+	GasWanted string   `json:"gas_wanted"`
+	GasUsed   string   `json:"gas_used"`
+	Value     msgValue `json:"value"`
+}
+
 type txnResponse struct {
-	Sent         txnsFromChain `json:"sent"`
-	Received     txnsFromChain `json:"received"`
-	Status       int           `json:"status"`
-	ResponseText string        `json:"responseText"`
+	Sent         finalTxnData `json:"sent"`
+	Received     finalTxnData `json:"received"`
+	Status       int          `json:"status"`
+	ResponseText string       `json:"responseText"`
 }
 
 type txnsFromChain struct {
@@ -62,7 +77,9 @@ func TransactionsHandler(w http.ResponseWriter, r *http.Request) {
 	chain := strings.ToLower(r.URL.Query().Get("chain"))
 	var finalRes *txnResponse
 	var sentResFromChain txnsFromChain
+	var finalSentTxs []finalTxn
 	var receivedResFromChain txnsFromChain
+	var finalReceivedTxs []finalTxn
 	var sentAPI string
 	var receivedAPI string
 	if addr != "" && chain != "" {
@@ -104,10 +121,49 @@ func TransactionsHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		fmt.Println(resJson)
-
+		if len(sentResFromChain.Txs) > 0 {
+			for i := range sentResFromChain.Txs {
+				finalSentTxs = append(finalSentTxs, finalTxn{
+					Height:    sentResFromChain.Txs[i].Height,
+					Txhash:    sentResFromChain.Txs[i].Txhash,
+					Data:      sentResFromChain.Txs[i].Data,
+					GasWanted: sentResFromChain.Txs[i].GasWanted,
+					GasUsed:   sentResFromChain.Txs[i].GasUsed,
+					Value: msgValue{
+						FromAddress: sentResFromChain.Txs[i].Tx.Value.Msg[0].Value.FromAddress,
+						ToAddress:   sentResFromChain.Txs[i].Tx.Value.Msg[0].Value.ToAddress,
+						Amount:      sentResFromChain.Txs[i].Tx.Value.Msg[0].Value.Amount,
+					},
+				})
+			}
+		}
+		if len(receivedResFromChain.Txs) > 0 {
+			for j := range receivedResFromChain.Txs {
+				finalReceivedTxs = append(finalReceivedTxs, finalTxn{
+					Height:    receivedResFromChain.Txs[j].Height,
+					Txhash:    receivedResFromChain.Txs[j].Txhash,
+					Data:      receivedResFromChain.Txs[j].Data,
+					GasWanted: receivedResFromChain.Txs[j].GasWanted,
+					GasUsed:   receivedResFromChain.Txs[j].GasUsed,
+					Value: msgValue{
+						FromAddress: receivedResFromChain.Txs[j].Tx.Value.Msg[0].Value.FromAddress,
+						ToAddress:   receivedResFromChain.Txs[j].Tx.Value.Msg[0].Value.ToAddress,
+						Amount:      receivedResFromChain.Txs[j].Tx.Value.Msg[0].Value.Amount,
+					},
+				})
+			}
+		}
 		finalRes = &txnResponse{
-			Sent:         sentResFromChain,
-			Received:     receivedResFromChain,
+			Sent: finalTxnData{
+				Count:      sentResFromChain.Count,
+				TotalCount: sentResFromChain.TotalCount,
+				Txs:        finalSentTxs,
+			},
+			Received: finalTxnData{
+				Count:      receivedResFromChain.Count,
+				TotalCount: receivedResFromChain.TotalCount,
+				Txs:        finalReceivedTxs,
+			},
 			Status:       200,
 			ResponseText: "successful",
 		}
